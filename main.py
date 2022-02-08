@@ -16,6 +16,7 @@ import pyttsx3
 import pywhatkit
 import datetime
 import wikipedia
+import pyjokes
 listener = sr.Recognizer()
 
 # voice = engine.getProperty('voices')
@@ -70,5 +71,13 @@ def run_alexa():
         info = wikipedia.summary(person,1) # summary takes the info to be searched and number of lines of the answer
         print(info)
         talk(info)
+    elif 'joke' in command:
+        joke = pyjokes.get_joke()
+        print(joke)
+        talk(joke)
+    else:
+        talk('sorry I did not understand')
 
-run_alexa()
+
+while True:
+    run_alexa()
