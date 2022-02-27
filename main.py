@@ -195,9 +195,15 @@ class AI:
 
             elif "cam" in command:
                 pTime = 0
-                decorator = htm.handDetector()
+                decorator = htm.handDetector(trackCon=0.7)  # confidence of the detection
                 # if "quit" in self.take_command("quit"):
                 # # break
+                tipIDs = [4, 8, 12, 16, 20]
+                bestOutOf = 1
+                self.talk("best out of thee?")
+                answer = self.take_command("RPS")
+                if answer in self.yesWordsList:
+                    bestOutOf = 3
                 while True:
                     success, img = self.cap.read()
                     img = decorator.findHands(img)
@@ -205,6 +211,32 @@ class AI:
                     fps = 1 / (cTime - pTime)
                     pTime = cTime
                     cv2.putText(img, f'FPS: {int(fps)}', (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
+
+                    fingers = []
+                    lmList = decorator.findPosition(img, draw=False)
+                    if len(lmList) != 0:
+
+                        if lmList[tipIDs[0]][1] > lmList[tipIDs[0] - 1][1]:
+                            fingers.append(1)
+                        else:
+                            fingers.append(0)
+                        for id in range(1, 5):
+                            if lmList[tipIDs[id]][2] < lmList[tipIDs[id] - 2][2]:
+                                fingers.append(1)
+                            else:
+                                fingers.append(0)
+
+                    TotoalFingers = fingers.count(1)
+                    print(TotoalFingers)
+                    # print(fingers)
+                    cv2.rectangle(img, (20, 270), (170, 300), (0,0,0), cv2.FILLED)
+
+                    if TotoalFingers == 0:
+                        cv2.putText(img,"Rock", (30,290),cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 3)
+                    elif TotoalFingers == 2:
+                        cv2.putText(img,"Scissors", (30,290),cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 3)
+                    elif TotoalFingers == 5:
+                        cv2.putText(img,"Paper", (30,290),cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 3)
 
                     cv2.imshow("Image", img)
                     cv2.waitKey(1)
