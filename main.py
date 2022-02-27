@@ -14,51 +14,109 @@
 # Done: it tells time
 # Done: it tells a joke
 # Done: it plays music on YouTube
+# Done: it can change voice gender
+# Done: it can look up synonyms
 
-
+# TODO: add cv2 and mediapipe functions
 # TODO: it needs to remember the old settings like name
+# TODO: Look up whether
+# TODO: Automated web scraping
+import requests
 import speech_recognition as sr
 import pyttsx3
 import pywhatkit
 import datetime
 import wikipedia
 import pyjokes
+from nltk.corpus import wordnet
+import nltk
+import cv2
+import time
+import HandTrackingModule as htm
+import os
 
 
-class AI():
+class AI:
     def __init__(self):
+        # Strings Init
         self.AI_Name = "alexa"
         self.GeneralCommands = "start of conversation"
-        self.yesWordsList = ["yes", "yep", "sure", "yea"]
+        self.yesWordsList = self.get_all_word_synonyms('ok') + self.get_all_word_synonyms(
+            "yes") + self.get_all_word_synonyms('yea') + ['yes']
+        # Cam Init
+        self.time = time
+        self.wCam, self.hCam = 640, 480
+        self.CamNumber = 0
+        self.cap = cv2.VideoCapture(self.CamNumber)
+        self.cap.set(3, self.wCam)
+        self.cap.set(4, self.hCam)
+
+        # Voice recognition Init
         self.listener = sr.Recognizer()
-        # voice = engine.getProperty('voices')
-        # engine.setProperty('voice', voices[1].id)
         self.engine = pyttsx3.init()
-        voices = self.engine.getProperty('voices')
-        self.engine.setProperty('voice', voices[1].id)
+        self.voices = self.engine.getProperty('voices')
+        self.typeOfVoice = 1
+        self.engine.setProperty('voice', self.voices[self.typeOfVoice].id)
         self.engine.say('Hi I am listening ')
         self.engine.runAndWait()  # you need this to let the engine have time to speak
 
+    def download_nltk_dependencies_if_needed(self):
+        try:
+            nltk.word_tokenize('foobar')
+        except LookupError:
+            nltk.download('punkt')
+        try:
+            nltk.pos_tag(nltk.word_tokenize('foobar'))
+        except LookupError:
+            nltk.download('averaged_perceptron_tagger')
+
+    def get_some_word_synonyms(self, word):
+        word = word.lower()
+        synonyms = []
+        synsets = wordnet.synsets(word)
+        if (len(synsets) == 0):
+            return []
+        synset = synsets[0]
+        lemma_names = synset.lemma_names()
+        for lemma_name in lemma_names:
+            lemma_name = lemma_name.lower().replace('_', ' ')
+            if (lemma_name != word and lemma_name not in synonyms):
+                synonyms.append(lemma_name)
+        return synonyms
+
+    def get_all_word_synonyms(self, word):
+        word = word.lower()
+        synonyms = []
+        synsets = wordnet.synsets(word)
+        if (len(synsets) == 0):
+            return []
+        for synset in synsets:
+            lemma_names = synset.lemma_names()
+            for lemma_name in lemma_names:
+                lemma_name = lemma_name.lower().replace('_', ' ')
+                if (lemma_name != word and lemma_name not in synonyms):
+                    synonyms.append(lemma_name)
+        return synonyms
+
     def take_command(self, listeningFor):
         '''
-        This function listen to the user and returns their input
-        '''
+            This function listen to the user and returns their input
+            '''
+        command = ''
+        while True:
+            try:
+                with sr.Microphone() as source:
+                    print("speak now..." + listeningFor)
 
-        def talk(text):
-            self.engine.say(text)
-            self.engine.runAndWait()
-
-        try:
-            with sr.Microphone() as source:
-                print("speak now..." + listeningFor)
-
-                voice = self.listener.listen(source)
-                command = self.listener.recognize_google(voice)
-                command = command.lower()
+                    voice = self.listener.listen(source)
+                    command = self.listener.recognize_google(voice)
+                    command = command.lower()
 
 
-        except:
-            pass
+            except:
+                pass
+            else:
+                break
 
         return command
 
@@ -70,7 +128,6 @@ class AI():
         command = self.take_command(self.GeneralCommands)
         if self.AI_Name in command:
             command = command.replace(self.AI_Name, '')
-            print(command)
             print(command)
             if 'play' in command:
                 song = command.replace('play', '')
@@ -109,6 +166,55 @@ class AI():
                         break
                     if i == 1:
                         self.talk("My name is still" + self.AI_Name)
+
+            elif "synonym word for" in command:
+
+                synonymWord = command.split("synonym word for", 1)[1]
+                print("word is", synonymWord)
+                listOfSynonmys = self.get_all_word_synonyms(synonymWord.strip())  # need to get rid off-white space or
+                # it will not work
+                print(listOfSynonmys)
+                for word in listOfSynonmys:
+                    print(word)
+                    self.talk(word)
+            elif "change your voice to" in command:
+                newVoicetype = command.split("change your voice", 1)[1]
+                femaleSynonym = self.get_all_word_synonyms("female") + ["female"]
+                malesynonym = self.get_all_word_synonyms("male") + ["male"]
+                print("word is", newVoicetype)
+                print(femaleSynonym)
+                print(malesynonym)
+                if any(word in newVoicetype.strip() for word in femaleSynonym):
+                    self.typeOfVoice = 1
+                    print(self.typeOfVoice)
+                    self.engine.setProperty('voice', self.voices[self.typeOfVoice].id)
+                elif any(word in newVoicetype.strip() for word in malesynonym):
+                    self.typeOfVoice = 0
+                    print(self.typeOfVoice)
+                    self.engine.setProperty('voice', self.voices[self.typeOfVoice].id)
+
+            elif "cam" in command:
+                pTime = 0
+                decorator = htm.handDetector()
+                # if "quit" in self.take_command("quit"):
+                # # break
+                while True:
+                    success, img = self.cap.read()
+                    img = decorator.findHands(img)
+                    cTime = self.time.time()
+                    fps = 1 / (cTime - pTime)
+                    pTime = cTime
+                    cv2.putText(img, f'FPS: {int(fps)}', (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 0), 3)
+
+                    cv2.imshow("Image", img)
+                    cv2.waitKey(1)
+                    # k = cv2.waitKey(0)
+                    # if k == 27:  # wait for ESC key to exit and terminate progra,
+                    #     cv2.destroyAllWindows()
+                    #     break
+                    # # if "quit" in self.take_command("quit"):
+                    # #     break
+
 
             else:
                 self.talk('sorry I did not understand')
