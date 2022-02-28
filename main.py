@@ -200,7 +200,7 @@ class AI:
                 # # break
                 tipIDs = [4, 8, 12, 16, 20]
                 bestOutOf = 1
-                self.talk("best out of thee?")
+                self.talk("best out of three?")
                 answer = self.take_command("RPS")
                 if answer in self.yesWordsList:
                     bestOutOf = 3
@@ -229,17 +229,31 @@ class AI:
                     TotoalFingers = fingers.count(1)
                     print(TotoalFingers)
                     # print(fingers)
-                    cv2.rectangle(img, (20, 270), (170, 300), (0,0,0), cv2.FILLED)
-
+                    cv2.rectangle(img, (20, 270), (170, 300), (0, 0, 0), cv2.FILLED)
+                    # 0 fingers up means rock
                     if TotoalFingers == 0:
-                        cv2.putText(img,"Rock", (30,290),cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 3)
+                        cv2.putText(img, "Rock", (30, 290), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 3)
+                    # 2 fingers up means Scissors
                     elif TotoalFingers == 2:
-                        cv2.putText(img,"Scissors", (30,290),cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 3)
+                        cv2.putText(img, "Scissors", (30, 290), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 3)
+                        # 5 fingers up means Paper
                     elif TotoalFingers == 5:
-                        cv2.putText(img,"Paper", (30,290),cv2.FONT_HERSHEY_PLAIN, 2, (255,255,255), 3)
+                        cv2.putText(img, "Paper", (30, 290), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 3)
 
-                    cv2.imshow("Image", img)
-                    cv2.waitKey(1)
+                    cv2.rectangle(img, (570, 50), (630, 0), (0, 0, 255), cv2.FILLED)
+                    cv2.putText(img, "X", (570, 50), cv2.FONT_HERSHEY_PLAIN, 4, (255, 255, 255), 3)
+
+                    # index finger pos
+                    if len(lmList) != 0:
+
+                        x1 , y1 = lmList[8][1], lmList[8][2]
+
+
+                        if (x1 > 570) and (y1 <50 ):
+                            cv2.destroyAllWindows()
+
+                            break
+
                     # k = cv2.waitKey(0)
                     # if k == 27:  # wait for ESC key to exit and terminate progra,
                     #     cv2.destroyAllWindows()
@@ -247,7 +261,8 @@ class AI:
                     # # if "quit" in self.take_command("quit"):
                     # #     break
 
-
+                    cv2.imshow("Image", img)
+                    cv2.waitKey(1)
             else:
                 self.talk('sorry I did not understand')
 
