@@ -34,6 +34,8 @@ import cv2
 import time
 import HandTrackingModule as htm
 import requests
+from vosk import Model, KaldiRecognizer
+import pyaudio
 import os
 
 
@@ -61,6 +63,10 @@ class AI:
         self.engine.say('Hi I am listening ')
         self.engine.runAndWait()  # you need this to let the engine have time to speak
 
+        # Voice recognition Init __offline
+        self.Voice_rec_model = Model(r'C:\Users\khali\OneDrive\GitHub\My_Personal_AI_Assistant\models\vosk-model-small-en-us-0.15')
+        self.recognizer = KaldiRecognizer(self.Voice_rec_model, 16000)
+        #https://www.youtube.com/watch?v=SqVeAxrPAB0&ab_channel=C%C3%B3digoLogo
     def download_nltk_dependencies_if_needed(self):
         try:
             nltk.word_tokenize('foobar')
@@ -118,6 +124,14 @@ class AI:
                 pass
             else:
                 break
+
+        ###### offline option
+        # cap = pyaudio.PyAudio()
+        # stream = cap.open(format=pyaudio.paInt16, channels=1, rate=1600, input=True, frames_per_buffer=8192)
+        # stream.start_stream()
+        # while True:
+        #     data =stream.r
+
 
         return command
 
