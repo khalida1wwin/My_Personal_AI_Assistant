@@ -16,10 +16,10 @@
 # Done: it plays music on YouTube
 # Done: it can change voice gender
 # Done: it can look up synonyms
+# Done: Look up whether
 
 # TODO: add cv2 and mediapipe functions
 # TODO: it needs to remember the old settings like name
-# TODO: Look up whether
 # TODO: Automated web scraping
 import requests
 import speech_recognition as sr
@@ -33,6 +33,7 @@ import nltk
 import cv2
 import time
 import HandTrackingModule as htm
+import requests
 import os
 
 
@@ -46,7 +47,7 @@ class AI:
         # Cam Init
         self.time = time
         self.wCam, self.hCam = 640, 480
-        self.CamNumber = 0
+        self.CamNumber = 1
         self.cap = cv2.VideoCapture(self.CamNumber)
         self.cap.set(3, self.wCam)
         self.cap.set(4, self.hCam)
@@ -192,6 +193,13 @@ class AI:
                     self.typeOfVoice = 0
                     print(self.typeOfVoice)
                     self.engine.setProperty('voice', self.voices[self.typeOfVoice].id)
+            elif "weather" in command:
+                city = "Edmonton"
+                url = 'https://wttr.in/{}'.format(city)
+                res = requests.get(url)
+                self.talk("this is the waether for" + city)
+                print(res.text)
+
 
             elif "cam" in command:
                 pTime = 0
@@ -236,7 +244,7 @@ class AI:
                     # 2 fingers up means Scissors
                     elif TotoalFingers == 2:
                         cv2.putText(img, "Scissors", (30, 290), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 3)
-                        # 5 fingers up means Paper
+                    # 5 fingers up means Paper
                     elif TotoalFingers == 5:
                         cv2.putText(img, "Paper", (30, 290), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 3)
 
@@ -251,7 +259,6 @@ class AI:
 
                         if (x1 > 570) and (y1 <50 ):
                             cv2.destroyAllWindows()
-
                             break
 
                     # k = cv2.waitKey(0)
@@ -266,7 +273,8 @@ class AI:
             else:
                 self.talk('sorry I did not understand')
 
-
 AI = AI()
 while True:
     AI.run_AI()
+
+
